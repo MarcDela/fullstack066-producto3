@@ -7,6 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
+    "start": "node index.js",
+  "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -22,7 +24,9 @@
   },
   "homepage": "https://github.com/MarcDela/fullstack066-producto3#readme",
   "dependencies": {
-    "express": "^5.2.1"
+    "apollo-server-express": "^3.13.0",
+    "express": "^4.17.1",
+    "graphql": "^16.13.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

@@ -7,7 +7,7 @@ Prompt 3: "Qué estructura deben tener usuarios, ofertas y demandas en un protot
 Prompt 4: "Cómo definir datos iniciales en memoria para una aplicación sin persistencia"
 */
 
-export let ofertas = [
+let ofertas = [
     {
         id: 1,
         titulo: "Tractorista",
@@ -26,7 +26,7 @@ export let ofertas = [
     }
 ];
 
-export let demandas = [
+let demandas = [
     {
         id: 3,
         nombre: "Laura Gómez",
@@ -45,7 +45,7 @@ export let demandas = [
     }
 ];
 
-export let usuarios = [
+let usuarios = [
     {
         id: 1,
         nombre: "Admin",
@@ -68,3 +68,10 @@ export let usuarios = [
         rol: "Empresa"
     }
 ];
+
+// Exportación para Node.js (CommonJS)
+module.exports = {
+    ofertas,
+    demandas,
+    usuarios
+};
