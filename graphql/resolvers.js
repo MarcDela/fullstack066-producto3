@@ -111,7 +111,7 @@ const resolvers = {
         /**
          * Elimina una demanda por su ID.
          */
-        eliminarDemanda: (_, { id }) => {
+        eliminarDemanda: async (_, { id }, { db }) => {
             const resultado = await db.collection('demandas').deleteOne({ 
                 _id: new ObjectId(id) 
             });
