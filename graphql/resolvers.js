@@ -4,103 +4,170 @@ const { ofertas, demandas, usuarios } = require('../data/datos.js');
 const jwt = require('jsonwebtoken');
 const { AuthenticationError } = require('apollo-server-express');
 const SECRETO = 'MI_CLAVE_SUPER_SECRETA_AGROJOBS';
-
-// Función para mantener la unicidad global de IDs de los dos arrays (ofertas y demandas)
-const obtenerNuevoId = () => {
-    const todos = [...ofertas, ...demandas];
-    if (todos.length === 0) return 1;
-    return Math.max(...todos.map(e => Number(e.id))) + 1;
-};
+// Esto lo usamos para recuperar el ID de los objetos, ahora que usamos MongoDB, el se va a encargar de generarlos
+const { ObjectId } = require('mongodb');
 
 const resolvers = {
 
     Query: {
-        obtenerOfertas: () => ofertas,
-        obtenerDemandas: () => demandas,
-        obtenerUsuarios: () => usuarios,
-        buscarUsuario: (_, { email }) => {return usuarios.find(u => u.email === email);},
+        /**
+         * Obtiene todas las ofertas de la colección 'ofertas'.
+         * Usamos el tercer argumento { db } extraído del contexto.
+         * @returns {Promise<Array>} Lista de ofertas de la DB.
+         */
+        obtenerOfertas: async (_, __, { db }) => {
+            return await db.collection('ofertas').find().toArray();
+        },
+
+        /**
+         * Obtiene todas las demandas de la colección 'demandas'.
+         * @returns {Promise<Array>} Lista de demandas de la DB.
+         */
+        obtenerDemandas: async (_, __, { db }) => {
+            return await db.collection('demandas').find().toArray();
+        },
+
+        /**
+         * Obtiene todos los usuarios de la colección 'usuarios'.
+         * @returns {Promise<Array>} Lista de usuarios.
+         */
+        obtenerUsuarios: async (_, __, { db }) => {
+            return await db.collection('usuarios').find().toArray();
+        },
+
+        /**
+         * Busca un usuario único por su email en la base de datos.
+         * En MongoDB usamos findOne para obtener un objeto directo.
+         * @param {string} email Email a buscar.
+         * @returns {Promise<Object|null>} Usuario encontrado.
+         */
+        buscarUsuario: async (_, { email }, { db }) => {
+            return await db.collection('usuarios').findOne({ email });
+        },
     },
 
     Mutation: {
 
         // Ofertas
-        crearOferta: (_, { titulo, empresa, ubicacion, descripcion }) => {
+        /**
+         * Crea una nueva oferta de trabajo.
+         */
+        crearOferta: async (_, { titulo, empresa, ubicacion, descripcion }, { db }) => {
             const nuevaOferta = {
-                id: String(obtenerNuevoId()), // Generamos el ID único global
+                // No asignamos ID manualmente, MongoDB lo hace por nosotros
                 titulo,
                 empresa,
                 ubicacion,
                 descripcion,
                 fecha: new Date().toLocaleDateString('es-ES') // Formato español
             };
-            ofertas.push(nuevaOferta);
-            return nuevaOferta;
+            const resultado = await db.collection('ofertas').insertOne(nuevaOferta);
+            
+            // Retornamos el objeto con el ID que generó la base de datos
+            return { 
+                ...nuevaOferta, 
+                id: resultado.insertedId 
+            };
         },
 
-        eliminarOferta: (_, { id }) => {
-            const index = ofertas.findIndex(o => String(o.id) === String(id));
-            if (index !== -1) {
-                ofertas.splice(index, 1);
+        /**
+         * Elimina una oferta por su ID de MongoDB.
+         */
+        eliminarOferta: async (_, { id }, { db }) => {
+            // Intentamos eliminar usando el ID único de MongoDB
+            // Nota: id suele venir como String desde GraphQL, lo convertimos a ObjectId
+            const resultado = await db.collection('ofertas').deleteOne({ 
+                _id: new ObjectId(id) 
+            });
+
+            if (resultado.deletedCount === 1) {
                 return `Oferta con ID ${id} eliminada correctamente.`;
+            } else {
+                // Manejo de errores óptimo (como pide la rúbrica)
+                throw new Error(`Error: No se encontró la oferta con ID ${id}.`);
             }
-            return "Error: No se encontró la oferta.";
         },
 
         // Demandas
-        crearDemanda: (_, { nombre, profesion, disponibilidad, descripcion }) => {
+        /**
+         * Crea una nueva demanda de empleo.
+         */
+        crearDemanda: async (_, { nombre, profesion, disponibilidad, descripcion }, { db }) => {
             const nuevaDemanda = {
-                id: String(obtenerNuevoId()), // Mismo generador de IDs global
                 nombre, 
                 profesion, 
                 disponibilidad, 
                 descripcion,
                 fecha: new Date().toLocaleDateString('es-ES')
             };
-            demandas.push(nuevaDemanda);
-            return nuevaDemanda;
+            const resultado = await db.collection('demandas').insertOne(nuevaDemanda);
+            
+            return { 
+                ...nuevaDemanda, 
+                id: resultado.insertedId 
+            };
         },
 
+        /**
+         * Elimina una demanda por su ID.
+         */
         eliminarDemanda: (_, { id }) => {
-            const index = demandas.findIndex(d => String(d.id) === String(id));
-            if (index !== -1) {
-                demandas.splice(index, 1);
-                return `Demanda con ID  ${id} eliminada correctamente.`;
+            const resultado = await db.collection('demandas').deleteOne({ 
+                _id: new ObjectId(id) 
+            });
+
+            if (resultado.deletedCount === 1) {
+                return `Demanda con ID ${id} eliminada correctamente.`;
+            } else {
+                throw new Error(`Error: No se encontró la demanda con ID ${id}.`);
             }
-            return "Error: No se encontró la demanda";
         },
 
         // Usuarios
-        crearUsuario: (_, { nombre, email, password, rol }) => {
-            const existe = usuarios.find(u => u.email === email);
+        /**
+         * Registra un nuevo usuario validando duplicados.
+         */
+        crearUsuario: async (_, { nombre, email, password, rol }, { db }) => {
+            const existe = await db.collection('usuarios').findOne({ email });
+
             if (existe) {
                 throw new UserInputError('El usuario ya existe con ese email');
             }
 
             const nuevoUsuario = {
-                id: String(usuarios.length + 1), 
                 nombre,
                 email,
                 password,
                 rol
             };
-
-            usuarios.push(nuevoUsuario);
-            return nuevoUsuario;
-        },
-        borrarUsuario: (_, { email }) => {
-            const index = usuarios.findIndex(u => u.email === email);
+            const resultado = await db.collection('usuarios').insertOne(nuevoUsuario);
             
-            if (index === -1) {
+            return { 
+                ...nuevoUsuario, 
+                id: resultado.insertedId 
+            };
+        },
+
+        /**
+         * Elimina un usuario por su email.
+         */
+        borrarUsuario: async (_, { email }, { db }) => {
+            const resultado = await db.collection('usuarios').deleteOne({ email });
+            
+            if (resultado.deletedCount === 0) {
                 throw new UserInputError('No se encontró el usuario a eliminar');
             }
 
-            usuarios.splice(index, 1);
             return `Usuario con email ${email} ha sido eliminado.`;
         },
 
         // Login
-        login: (_, { email, password }) => {
-            const usuario = usuarios.find(u => u.email === email);
+        /**
+         * Autentica a un usuario y genera un token JWT.
+         * @throws {AuthenticationError} Si las credenciales fallan.
+         */
+        login: async (_, { email, password }, { db }) => {
+            const usuario = await db.collection('usuarios').findOne({ email });
             
             // Verificar usuario
             if (!usuario) {
@@ -115,14 +182,17 @@ const resolvers = {
             // Generar Token JWT
             // Guardamos el ID y el Rol dentro del token
             const token = jwt.sign(
-                { id: usuario.id, email: usuario.email, rol: usuario.rol },
+                { id: usuario._id.toString(), email: usuario.email, rol: usuario.rol },
                 SECRETO,
                 { expiresIn: '2h' } // El token caduca en 2 horas
             );
 
             return {
                 token,
-                usuario
+                usuario: {
+                    ...usuario,
+                    id: usuario._id.toString()
+                }
             };
         }
     }

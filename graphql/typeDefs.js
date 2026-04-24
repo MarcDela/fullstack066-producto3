@@ -36,6 +36,7 @@ const typeDefs = gql`
     obtenerOfertas: [Oferta]
     obtenerDemandas: [Demanda]
     obtenerUsuarios: [Usuario]
+    buscarUsuario(email: String!): Usuario
   }
 
   type Mutation {
@@ -50,6 +51,9 @@ const typeDefs = gql`
     # Usuarios
     crearUsuario(nombre: String!, email: String!, password: String!, rol: String!): Usuario
     borrarUsuario(email: String!): String
+
+    # Login
+    login(email: String!, password: String!): Autenticacion
   }
 `;
 
