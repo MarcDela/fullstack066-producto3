@@ -16,7 +16,8 @@ const resolvers = {
          * @returns {Promise<Array>} Lista de ofertas de la DB.
          */
         obtenerOfertas: async (_, __, { db }) => {
-            return await db.collection('ofertas').find().toArray();
+            const ofertas = await db.collection('ofertas').find().toArray();
+            return ofertas.map(o => ({ ...o, id: o._id.toString() }));
         },
 
         /**
@@ -24,7 +25,8 @@ const resolvers = {
          * @returns {Promise<Array>} Lista de demandas de la DB.
          */
         obtenerDemandas: async (_, __, { db }) => {
-            return await db.collection('demandas').find().toArray();
+            const demandas = await db.collection('demandas').find().toArray();
+            return demandas.map(d => ({ ...d, id: d._id.toString() }));
         },
 
         /**
@@ -32,7 +34,12 @@ const resolvers = {
          * @returns {Promise<Array>} Lista de usuarios.
          */
         obtenerUsuarios: async (_, __, { db }) => {
-            return await db.collection('usuarios').find().toArray();
+            const usuarios = await db.collection('usuarios').find().toArray();
+            // Mapeamos los resultados para que '_id' (campo por defecto de MongoDB) pase a ser 'id'
+            return usuarios.map(usuario => ({
+                ...usuario,
+                id: usuario._id.toString()
+            }));
         },
 
         /**
