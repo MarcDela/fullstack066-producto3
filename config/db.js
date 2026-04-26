@@ -1,19 +1,25 @@
-const { MongoClient } = require('mongodb');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 
-// Configuración de conexión
-const user = 'admin';
-const pass = '12345';
-const host = 'localhost';
-const port = '27017';
+/**
+ * CONFIGURACIÓN DE MONGO ATLAS
+ * Sustituimos localhost por la cadena de conexión de ClusterMarc
+ */
+const uri = "mongodb+srv://mdelarivap_db_user:Xr0zo63aV3r6Skxd@clustermarc.jatewln.mongodb.net/?appName=ClusterMarc";
 const dbName = 'agrojobsDB';
 
-const uri = `mongodb://${user}:${pass}@${host}:${port}`;
-const client = new MongoClient(uri);
+// Creamos el cliente con configuración recomendada para Atlas
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
 
 let db; // Variable para cachear la conexión
 
 /**
- * Conecta a MongoDB y devuelve la instancia de la base de datos.
+ * Conecta a MongoDB Atlas y devuelve la instancia de la base de datos.
  * @returns {Promise<Db>}
  */
 async function conectarDB() {
@@ -21,12 +27,18 @@ async function conectarDB() {
 
     try {
         await client.connect();
-        console.log('✅ Conexión exitosa a MongoDB en Docker (con autenticación)');
+        
+        // Verificamos la conexión (haciendo un ping)
+        await client.db("admin").command({ ping: 1 });
+        
+        console.log('✅ Conexión exitosa a MongoDB Atlas (Cloud: ClusterMarc)');
+        
         db = client.db(dbName);
         return db;
     } catch (error) {
-        console.error('❌ Error crítico: No se pudo conectar a MongoDB.');
-        console.error('Asegúrate de que el contenedor "mongodb-agrojobs" está en RUNNING en Docker Desktop.');
+        console.error('❌ Error crítico: No se pudo conectar a MongoDB Atlas.');
+        console.error('Detalles del error:', error.message);
+        console.error('Error de conexión: \n1. ¿IP configurada en "Network Access"? \n2. ¿Usuario/Password correctos?');
         process.exit(1);
     }
 }

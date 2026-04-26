@@ -30,7 +30,7 @@ async function startServer() {
     const PORT = 4000;
     app.listen(PORT, () => {
         console.log(`🚀 Servidor listo en http://localhost:${PORT}${server.graphqlPath}`);
-        console.log(`📊 La persistencia en MongoDB (Docker) está activa.`);
+        console.log(`📊 La persistencia en MongoDB (Atlas) está activa.`);
     });
 }
 
