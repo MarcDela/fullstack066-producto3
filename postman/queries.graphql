@@ -1,0 +1,31 @@
+# 1. Salud
+query { salud }
+
+# 2. Login
+mutation {
+  login(email: "admin@agrojobs.com", password: "123456aA") {
+    token
+    usuario { id nombre email rol }
+  }
+}
+
+# 3. Usar con Authorization: Bearer TOKEN
+query {
+  publicaciones { id titulo tipo email fecha descripcion empresa ubicacion }
+}
+
+# 4. Crear publicación
+mutation {
+  crearPublicacion(input: {
+    titulo: "Peón agrícola",
+    email: "empresa@correo.com",
+    fecha: "2026-05-04",
+    descripcion: "Apoyo en campaña agrícola.",
+    tipo: Oferta,
+    empresa: "AgroJobs",
+    ubicacion: "Tàrrega"
+  }) { id titulo tipo }
+}
+
+# 5. Estadísticas
+query { estadisticas { ofertas demandas total } }
