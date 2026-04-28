@@ -2,32 +2,26 @@
 import { Almacenaje } from "../../js/almacenaje.js";
 
 export const root = {
-    getOfertas: () => Almacenaje.obtenerOfertas(),
-    getDemandas: () => Almacenaje.obtenerDemandas(),
-    getUsuarios: () => Almacenaje.obtenerUsuarios(),
+    getOfertas: async() => {return await Almacenaje.obtenerOfertas();},
+    getDemandas: async() => {return await Almacenaje.obtenerDemandas();},
+    getUsuarios: async() => {return await Almacenaje.obtenerUsuarios()},
 
-    crearOferta: ({titulo,empresa,ubicacion,descripcion,fecha}) => {
-        const lista=Almacenaje.obtenerOfertas();
+    crearOferta: async ({titulo,empresa,ubicacion,descripcion,fecha}) => {
+        const lista=await Almacenaje.obtenerOfertas();
         const nueva={id:String(lista.length+1),titulo,empresa,ubicacion,descripcion,fecha};
-        lista.push(nueva);
-        Almacenaje.guardarOfertas(lista);
-        return nueva;
+        return await Almacenaje.guardarOferta(nueva);
     },   
 
-    crearDemanda: ({nombre,profesion,disponibilidad,descripcion,fecha}) =>{
-        const lista=Almacenaje.obtenerDemandas();
+    crearDemanda: async ({nombre,profesion,disponibilidad,descripcion,fecha}) =>{
+        const lista=await Almacenaje.obtenerDemandas();
         const nueva={id:String(lista.length+1),nombre,profesion,disponibilidad,descripcion,fecha};
-          lista.push(nueva);
-          Almacenaje.guardarDemandas(lista);
-          return nueva;
+          return await Almacenaje.guardarDemanda(nueva);
     }, 
 
-    crearUsuario: ({nombre,email,password,rol}) => {
-        const lista = Almacenaje.obtenerUsuarios();
+    crearUsuario: async ({nombre,email,password,rol}) => {
+        const lista =await Almacenaje.obtenerUsuarios();
         const nuevo ={id:String(lista.length+1), nombre,email,password,rol};
-        lista.push(nuevo);
-        Almacenaje.guardarUsuarios(lista);
-        return nuevo;
+        return await Almacenaje.guardarUsuario(nuevo);
     }
 
 };
