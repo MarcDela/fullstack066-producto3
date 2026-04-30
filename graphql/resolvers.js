@@ -49,7 +49,16 @@ const resolvers = {
          * @returns {Promise<Object|null>} Usuario encontrado.
          */
         buscarUsuario: async (_, { email }, { db }) => {
-            return await db.collection('usuarios').findOne({ email });
+            const usuario = await db.collection('usuarios').findOne({ email });
+
+            // Si no encuentra el usuario, devolvemos null (GraphQL lo gestionará)
+            if (!usuario) return null;
+
+            // Mapeamos _id a id antes de devolverlo
+            return {
+                ...usuario,
+                id: usuario._id.toString()
+            };
         },
     },
 
