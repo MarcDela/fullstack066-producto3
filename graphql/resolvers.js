@@ -2,7 +2,7 @@
 const { ofertas, demandas, usuarios } = require('../data/datos.js');
 // Datos de autentificación y gestión de errores de login
 const jwt = require('jsonwebtoken');
-const { AuthenticationError } = require('apollo-server-express');
+const { AuthenticationError, UserInputError } = require('apollo-server-express');
 const SECRETO = 'MI_CLAVE_SUPER_SECRETA_AGROJOBS';
 // Esto lo usamos para recuperar el ID de los objetos, ahora que usamos MongoDB, el se va a encargar de generarlos
 const { ObjectId } = require('mongodb');
