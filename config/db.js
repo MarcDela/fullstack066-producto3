@@ -4,7 +4,7 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
  * CONFIGURACIÓN DE MONGO ATLAS
  * Sustituimos localhost por la cadena de conexión de ClusterMarc
  */
-const uri = "mongodb+srv://mdelarivap_db_user:Xr0zo63aV3r6Skxd@clustermarc.jatewln.mongodb.net/?appName=ClusterMarc";
+const uri = process.env.MONGODB_URL;
 const dbName = 'agrojobsDB';
 
 // Creamos el cliente con configuración recomendada para Atlas
